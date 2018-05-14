@@ -1,0 +1,10 @@
+---
+- name: Prepare for ansible
+  hosts: localhost
+  gather_facts: False
+  vars_files:
+    - ../answerfile.yml
+  tasks:
+    - name: Copy ssh key to the nodes
+      shell: sshpass -p "{{ item.value.password }}" ssh-copy-id -i ~/.ssh/id_rsa.pub -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null  "{{ item.value.username }}@{{ item.value.ip }}"
+      with_dict: "{{ Nodes }}"

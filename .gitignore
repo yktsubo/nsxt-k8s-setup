@@ -1,0 +1,4 @@
+*.retry
+*.rpm
+*.tar
+*.deb

@@ -1,0 +1,163 @@
+env:
+  nsxManager:
+    ip: '10.16.181.153'
+    username: 'admin'    
+    password: 'VMware1!' 
+  nsxController:
+    - ip: '10.16.181.154'
+      username: 'admin'    
+      password: 'VMware1!'
+      secret: 'VMware1!'
+  nsxEdge:
+    - ip: '10.16.181.157'
+      username: 'admin'    
+      password: 'VMware1!' 
+      
+# action: create,update,delete
+    
+tasks:
+  - module: 'LogicalSwitch'
+    action: 'create'
+    data:
+      display_name: 'k8s-mgmt'
+      transport_zone_id: 'OverlayTZ'
+
+  - module: 'LogicalSwitch'
+    action: 'create'
+    data:
+      display_name: 'k8s-transport'
+      transport_zone_id: 'OverlayTZ'
+
+  - module: 'LogicalSwitch'
+    action: 'create'
+    data:
+      display_name: 'ExternalLS'
+      transport_zone_id: 'VlanTZ'
+      vlan: '893'
+
+  - module: 'T0'
+    action: 'create'
+    data:
+      display_name: 'T0'
+      edge_cluster_id: 'EdgeCluster1'
+      failover_mode: 'PREEMPTIVE'
+      high_availability_mode: 'ACTIVE_STANDBY'
+      router_type: 'TIER0'
+      
+  - module: 'T0'
+    action: 'update'
+    data:
+      display_name: 'T0'
+      create_uplink:
+        ls: 'ExternalLS'
+        display_name: 'Uplink1'
+        ip_address: '192.168.12.21'
+        prefix_length: '24'
+        edge_node: 'nsxe-site4-01'
+
+  - module: 'T0'
+    action: 'update'
+    data:
+      display_name: 'T0'
+      create_uplink:
+        ls: 'ExternalLS'
+        display_name: 'Uplink2'
+        ip_address: '192.168.12.22'
+        prefix_length: '24'
+        edge_node: 'nsxe-site4-02'
+
+  - module: 'T0'
+    action: 'update'
+    data:
+      display_name: 'T0'
+      add_static_route:
+        network: '0.0.0.0/0'
+        next_hops:
+          - administrative_distance: '1'
+            ip_address: '192.168.12.254'
+
+  - module: 'T0'
+    action: 'update'
+    data:
+      display_name: 'T0'
+      ha_vip_config:
+        vip: '192.168.12.20'
+        prefix_length: '24'
+        uplinks:
+          - 'Uplink1'
+          - 'Uplink2'
+  
+  - module: 'T1'
+    action: 'create'
+    data:
+      display_name: 'T1-k8smgmt'
+      failover_mode: 'PREEMPTIVE'
+      router_type: 'TIER1'
+
+  - module: 'T1'
+    action: 'update'
+    data:
+      display_name: 'T1-k8smgmt'      
+      connect_to_T0: 'T0'
+
+
+  - module: 'T1'
+    action: 'update'
+    data:
+      display_name: 'T1-k8smgmt'      
+      connect_to_LS:
+        ls: 'k8s-mgmt'
+        ip_address: '192.168.80.254'
+        prefix_length: '24'
+
+  - module: 'T1'
+    action: 'update'
+    data:
+      display_name: 'T1-k8smgmt'            
+      advertisement:
+        enabled: 'True'
+        advertise_nsx_connected_routes: 'True'
+      
+  - module: 'IPPool'
+    action: 'create'
+    data:
+      display_name: 'k8s-ippool'
+      subnets:
+        - allocation_ranges:
+            - start: '192.168.81.1'
+              end: '192.168.81.200'
+          cidr: '192.168.81.0/24'
+
+  - module: 'IPBlock'
+    action: 'create'
+    data:
+      display_name: 'k8s-ipblock'      
+      cidr: '172.16.0.0/16'
+          
+  - module: 'DFWSection'
+    action: 'create'
+    data:
+      display_name: 'Admin Bottom'
+      section_type: 'LAYER3'
+      stateful: 'True'
+      tags:
+        - scope: 'ncp/fw_sect_marker'
+          tag: 'bottom'
+
+  - module: 'DFWSection'
+    action: 'create'
+    data:
+      display_name: 'Admin Middle'
+      section_type: 'LAYER3'
+      stateful: 'True'
+
+  - module: 'DFWSection'
+    action: 'create'
+    data:
+      display_name: 'Admin Top'
+      section_type: 'LAYER3'
+      stateful: 'True'
+      tags:
+        - scope: 'ncp/fw_sect_marker'
+          tag: 'top'
+          

@@ -1,0 +1,181 @@
+---
+- name: Prep NCP
+  hosts: nodes
+  become: yes
+  gather_facts: True
+  vars_files:
+    - ../answerfile.yml
+    - ../defaults.yml    
+  tasks:
+    - block:
+      - name: Download CNI rpm
+        copy:
+          src: ../files/{{ ubuntu.cni_deb }}
+          dest: /tmp/cni.deb
+      
+      - name: Download OVS
+        copy:
+          src: ../files/{{ ubuntu.ovs_deb }}          
+          dest: /tmp/ovs.deb
+      
+      - name: Download OVS data
+        copy:
+          src: ../files/{{ ubuntu.ovs_data_deb }}          
+          dest: /tmp/ovs_data.deb
+      
+      - name: Download OVS common
+        copy:
+          src: ../files/{{ ubuntu.ovs_common_deb }}                    
+          dest: /tmp/ovs_common.deb
+          
+      - name: Download lib OVS
+        copy:
+          src: ../files/{{ ubuntu.ovs_lib_deb }}                    
+          dest: /tmp/lib_ovs.deb
+      
+      ## Get NCP tar file and make it docker image
+      - name: Download ncp image tar file
+        copy:
+          src: ../files/{{ ubuntu.ncp_image }}
+          dest: /tmp/nsx_ncp_ubuntu.tar
+          force: no
+          
+      - name: install ovs 1
+        apt: deb=/tmp/ovs_data.deb
+      
+      - name: install ovs 2
+        apt: deb=/tmp/lib_ovs.deb
+      
+      - name: install ovs 3
+        apt: deb=/tmp/ovs_common.deb
+      
+      - name: install ovs 4
+        apt: deb=/tmp/ovs.deb
+          
+      - name: ovs service reload
+        shell: service openvswitch-switch force-reload-kmod
+      
+      - name: Create OVS bridge
+        openvswitch_bridge: bridge=br-int state=present fail_mode=standalone
+        args:
+          external_ids:
+              bridge-id: "br-int"
+        tags: ovs
+      
+      - name: Add the Uplink Port to OVS
+        openvswitch_port:
+          bridge: br-int
+          port: "{{ k8s.uplink_port }}"
+          state: present
+          set: Interface {{ k8s.uplink_port }} ofport_request=1
+        tags: ovs
+      
+      - name: Bring up br-int
+        command: "ip link set br-int up"
+      
+      - name: Bring up node-if
+        command: "ip link set {{ k8s.uplink_port }} up"
+      
+      - name: install CNI
+        apt: deb=/tmp/cni.deb
+      
+      # Using docker_image to load tar file to docker image
+      - name: Load image from the image tar file
+        shell: docker load -i /tmp/nsx_ncp_ubuntu.tar
+      
+      - name: Register the docker image name
+        shell: docker images | grep nsx-ncp-ubuntu
+        register: nsx_ncp_ubuntu
+
+      - name: Tag image as nsx-ncp
+        shell: docker tag "{{ nsx_ncp_ubuntu.stdout.split()[0] }}" nsx-ncp
+      when: ansible_distribution == 'Ubuntu'
+      
+    - block:
+      - name: Download CNI rpm
+        copy:
+          src: ../files/nsx-cni-2.1.3.8356796-1.x86_64.rpm
+          dest: /tmp/cni.rpm
+  
+      - name: Install CNI
+        shell: rpm -ivh --replacefiles /tmp/cni.rpm
+        ignore_errors: True
+        
+      - name: Download OVS
+        copy:
+          src: ../files/openvswitch-2.8.1.7345072-1.x86_64.rpm
+          dest: /tmp/ovs.rpm
+      
+      - name: Download OVS kmod1
+        copy:
+          src: ../files/openvswitch-kmod-2.8.1.7345072-1.el7.x86_64.rpm
+          dest: /tmp/ovs_kmod.rpm
+  
+      - name: Download OVS kmod2
+        copy:
+          src: ../files/kmod-openvswitch-2.8.1.7345072-1.el7.x86_64.rpm
+          dest: /tmp/kmod_ovs.rpm
+      
+      - name: Install OVS
+        yum:
+          name: /tmp/ovs.rpm
+          state: present
+        tags: ovs
+      
+      - name: Install OVS 2.6 Kernel Modules - 1
+        yum:
+          name: /tmp/ovs_kmod.rpm
+          state: present
+        tags: ovs
+      
+      - name: Install OVS 2.6 Kernel Modules - 2
+        yum:
+          name: /tmp/kmod_ovs.rpm
+          state: present
+      
+      # https://docs.ansible.com/ansible/systemd_module.html
+      # systemctl start openvswitch.service
+      - name: Start OVS service
+        systemd:
+          name: openvswitch
+          state: started
+      
+      - name: Create OVS bridge
+        openvswitch_bridge: bridge=br-int state=present fail_mode=standalone
+        args:
+          external_ids:
+              bridge-id: "br-int"
+        tags: ovs
+      
+      - name: Add the Uplink Port to OVS
+        openvswitch_port:
+          bridge: br-int
+          port: "{{ k8s.uplink_port }}"
+          state: present
+          set: Interface {{ k8s.uplink_port }} ofport_request=1
+        tags: ovs
+      
+      - name: Bring up br-int
+        command: "ip link set br-int up"
+      
+      - name: Bring up node-if
+        command: "ip link set {{ k8s.uplink_port }} up"
+      
+      ## Get NCP tar file and make it docker image
+      - name: Download ncp image tar file
+        copy:
+          src: ../files/nsx-ncp-rhel-2.1.3.8356796.tar
+          dest: /tmp/nsx_ncp_rhel.tar
+          force: no
+      
+      # Using docker_image to load tar file to docker image
+      - name: Load image from the image tar file
+        shell: docker load -i /tmp/nsx_ncp_rhel.tar
+      
+      - name: Register the docker image name
+        shell: docker images | grep nsx-ncp-rhel
+        register: nsx_ncp_rhel
+      
+      - name: Tag image as nsx-ncp
+        shell: docker tag "{{ nsx_ncp_rhel.stdout.split()[0] }}" nsx-ncp
+      when: ansible_distribution == 'Red Hat Enterprise Linux'            

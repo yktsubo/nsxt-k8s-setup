@@ -1,4 +1,9 @@
 
+
+# Supported
+- Ubuntu16.04
+- NSX-T 2.1
+
 # How to use
 
 1. Put files under ./files/ like below
