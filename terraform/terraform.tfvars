@@ -1,0 +1,5 @@
+vsphere_vcenter = "10.16.181.52"
+vsphere_user = "administrator@ytsuboi.local"
+vsphere_password = "VMware1!"
+vsphere_datacenter = "MyDC1"
+vsphere_cluster = "iscsi-site3"

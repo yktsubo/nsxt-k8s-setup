@@ -2,82 +2,8 @@
 __author__ = 'smetta'
 # Import the module
 import subprocess
-DOCUMENTATION = '''
----
-module: vraova_deploy
-Short_description: Module for deploying VRA ova through python
-description:
-    - Provides an interface for deployment of ova in venter
-versoin_added: "0.1"
-options:
-    power_on:
-        description:
-            -Indicates whether the appliance needs to be powered ons.
-        required: True
-        default: Null
-    vcenter_props:
-        description:
-            - Dictionary containing vcenter properties.
-        required: True
-        default: Null
-    location_props:
-        description:
-            - Dictionary containing the location properties of appliance
-        required: True
-        default: Null
-    ova_props:
-        description:
-            - Dictionary containing the directory and name of the ova file
-        required: True
-        default: Null
-   resource_props
-        description:
-            - Dictionary containing the properties of the appliance itself
-        required: True
-        default: Null
-    additional_props::
-        description:
-            - Dictionary containing additional properties of ova such as diskmode, IP  protocol
-        required: True
-    option_props:
-        description:
-            - List of options that can be specified for  ovf tool
-        required: True
-        default: null
-'''
-EXAMPLES = '''
-- name: Deploy  ova through Python
-  ignore_errors: yes
-  local_action:
-    module: ova_deploy
-    power_on: "{{vra_poweron}}"
-    vcenter_props:
-      vcenter_host: "{{ vcenter_host}}"
-      vcenter_port: "{{ vcenter_port }}"
-      vcenter_user: "{{ vcenter_user|urlencode }}"
-      vcenter_password: "{{ vcenter_password|urlencode }}"
-    location_props:
-      resource_name: "{{ name }}"
-      datacenter: "{{ datacenter }}"
-      network: "{{ network }}"
-      cluster: "{{ cluster }}"
-      data_store: "{{ vra_datastore }}"
-    ova_props:
-      ova_directory: "{{ ova_location }}"
-      ova_name: "{{ ova }}"
-    additional_props:
-     diskMode: 'thin'
-     ipProtocol: 'IPv4'
-    resource_props:
-      varoot-password: "{{vra_root_password}}"
-      va-ssh-enabled: "{{vra_ssh_enabled}}"
-      vami.hostname: "{{vra_host_name}}"
-    option_props:
-      - acceptAllEulas
-      - allowExtraConfig
-      - noSSLVerify
-
-'''
+DOCUMENTATION = ''
+EXAMPLES = ''
 
 
 def deploy_ova(module):

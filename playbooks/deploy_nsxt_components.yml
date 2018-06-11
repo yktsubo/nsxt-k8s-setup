@@ -24,7 +24,7 @@
         vcenter_password: "{{ vcenter.password }}"
         vcenter_ip: "{{ vcenter.ip }}"
         datacenter: "{{ vcenter.datacenter }}"
-        size: "{{ nsxt_manager.ip }}"
+        size: "{{ nsxt_manager.size }}"
         
     - name: Deploy NSX-T controller
       nsxt_deploy:
