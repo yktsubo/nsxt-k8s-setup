@@ -1,0 +1,63 @@
+dns: '${DNS}'
+domain: '${DOMAIN}'
+ntp: '${NTP}'
+
+nsxt_manager:
+  ip: '${NSX_MANAGER_IP}'
+  password: '${NSX_MANAGER_PASS}'
+  username: 'admin'
+  
+nsxt_controller:
+  nsxc-01:
+    ip: '${NSX_CONTROLLER_01_IP}'
+    password: '${NSX_CONTROLLER_01_PASS}'
+      
+nsxt_edge:
+  nsxe-site4-01:
+    ip: '${NSX_EDGE_01_IP}'
+    password: '${NSX_EDGE_01_PASS}'
+    
+  nsxe-site4-02:
+    ip: '${NSX_EDGE_02_IP}'
+    password: '${NSX_EDGE_02_PASS}'
+
+esxi:
+  esxicomp-01:
+    ip: '${ESXI_01_IP}'
+    username: '${ESXI_01_USER}'
+    password: '${ESXI_01_PASS}'
+  esxicomp-02:
+    ip: '${ESXI_02_IP}'
+    username: '${ESXI_02_USER}'
+    password: '${ESXI_02_PASS}'
+  
+k8s:    
+  uplink_port: ens192
+  tier0_router: T0
+  overlay_tz: OverlayTZ
+  container_ip_blocks: k8s-ipblock
+  external_ip_pools: k8s-ippool
+  top_firewall_section_marker: 'AdminTop'
+  bottom_firewall_section_marker: 'AdminBottom'
+  cluster_name: k8s-cluster1
+  master_node: k8s-master
+  use_cert: false
+  password: 'VMware1!'
+  
+Nodes:
+  k8s-master:
+    username: 'ubuntu'
+    password: 'VMware1!'
+    ip: '${K8S_MASTER_IP}'
+  k8s-node1:
+    username: 'ubuntu'
+    password: 'VMware1!'
+    ip: '${K8S_NODE1_IP}'
+  k8s-node2:
+    username: 'ubuntu'
+    password: 'VMware1!'
+    ip: '${K8S_NODE2_IP}'
+  k8s-node3:
+    username: 'ubuntu'
+    password: 'VMware1!'
+    ip: '${K8S_NODE3_IP}'

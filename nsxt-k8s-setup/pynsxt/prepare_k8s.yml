@@ -1,17 +1,20 @@
 env:
   nsxManager:
-    ip: '10.16.181.153'
-    username: 'admin'    
-    password: 'VMware1!' 
+    ip: '192.168.172.25'
+    username: 'admin'
+    password: 'VMware1!'
   nsxController:
-    - ip: '10.16.181.154'
+    - ip: '192.168.172.71'
       username: 'admin'    
       password: 'VMware1!'
       secret: 'VMware1!'
   nsxEdge:
-    - ip: '10.16.181.157'
+    - ip: '192.168.172.16'
       username: 'admin'    
-      password: 'VMware1!' 
+      password: 'VMware1!'
+    - ip: '192.168.172.2'
+      username: 'admin'    
+      password: 'VMware1!'
       
 # action: create,update,delete
     
@@ -21,7 +24,6 @@ tasks:
     data:
       display_name: 'k8s-mgmt'
       transport_zone_id: 'OverlayTZ'
-
   - module: 'LogicalSwitch'
     action: 'create'
     data:
@@ -33,7 +35,7 @@ tasks:
     data:
       display_name: 'ExternalLS'
       transport_zone_id: 'VlanTZ'
-      vlan: '893'
+      vlan: '0'
 
   - module: 'T0'
     action: 'create'
@@ -51,9 +53,9 @@ tasks:
       create_uplink:
         ls: 'ExternalLS'
         display_name: 'Uplink1'
-        ip_address: '192.168.12.21'
+        ip_address: '192.168.240.3'
         prefix_length: '24'
-        edge_node: 'nsxe-site4-01'
+        edge_node: 'nsxedge-01a'
 
   - module: 'T0'
     action: 'update'
@@ -62,31 +64,51 @@ tasks:
       create_uplink:
         ls: 'ExternalLS'
         display_name: 'Uplink2'
-        ip_address: '192.168.12.22'
+        ip_address: '192.168.240.4'
         prefix_length: '24'
-        edge_node: 'nsxe-site4-02'
+        edge_node: 'nsxedge-02a'
+        
+  - module: 'T0'
+    action: 'update'
+    data:
+      target: 'bgp'
+      display_name: 'T0'
+      as_num: 100
+      ecmp: False
+      enabled: True
+      graceful_restart: False
 
   - module: 'T0'
     action: 'update'
     data:
-      display_name: 'T0'
-      add_static_route:
-        network: '0.0.0.0/0'
-        next_hops:
-          - administrative_distance: '1'
-            ip_address: '192.168.12.254'
+      target: 'redistribution'
+      display_name: 'T0'      
+      bgp_enabled: True
 
   - module: 'T0'
-    action: 'update'
+    action: 'create'
     data:
+      target: 'redistribution_rule'
       display_name: 'T0'
-      ha_vip_config:
-        vip: '192.168.12.20'
-        prefix_length: '24'
-        uplinks:
-          - 'Uplink1'
-          - 'Uplink2'
-  
+      rule_name: 'Rest k8s route'
+      destination: "BGP"
+      sources:
+        # - 'NSX_CONNECTED'
+        # - 'NSX_STATIC'
+        - 'TIER0_NAT'
+        # - 'TIER1_NAT'
+        - 'TIER1_LB_VIP'
+        # - 'TIER1_LB_SNAT'
+        # - "STATIC"
+
+  - module: 'T0'
+    action: 'create'
+    data:
+      display_name: 'T0'      
+      target: 'bgp_neighbor'
+      neighbor_address: '192.168.240.1'
+      remote_as_num: '200'
+
   - module: 'T1'
     action: 'create'
     data:
@@ -100,14 +122,13 @@ tasks:
       display_name: 'T1-k8smgmt'      
       connect_to_T0: 'T0'
 
-
   - module: 'T1'
     action: 'update'
     data:
       display_name: 'T1-k8smgmt'      
       connect_to_LS:
         ls: 'k8s-mgmt'
-        ip_address: '192.168.80.254'
+        ip_address: '192.168.170.1'
         prefix_length: '24'
 
   - module: 'T1'
@@ -117,16 +138,17 @@ tasks:
       advertisement:
         enabled: 'True'
         advertise_nsx_connected_routes: 'True'
-      
+
+    
   - module: 'IPPool'
     action: 'create'
     data:
       display_name: 'k8s-ippool'
       subnets:
         - allocation_ranges:
-            - start: '192.168.81.1'
-              end: '192.168.81.200'
-          cidr: '192.168.81.0/24'
+            - start: '192.168.160.1'
+              end: '192.168.160.200'
+          cidr: '192.168.160.0/24'
 
   - module: 'IPBlock'
     action: 'create'
@@ -137,7 +159,7 @@ tasks:
   - module: 'DFWSection'
     action: 'create'
     data:
-      display_name: 'Admin Bottom'
+      display_name: 'AdminBottom'
       section_type: 'LAYER3'
       stateful: 'True'
       tags:
@@ -147,14 +169,14 @@ tasks:
   - module: 'DFWSection'
     action: 'create'
     data:
-      display_name: 'Admin Middle'
+      display_name: 'AdminMiddle'
       section_type: 'LAYER3'
       stateful: 'True'
 
   - module: 'DFWSection'
     action: 'create'
     data:
-      display_name: 'Admin Top'
+      display_name: 'AdminTop'
       section_type: 'LAYER3'
       stateful: 'True'
       tags:

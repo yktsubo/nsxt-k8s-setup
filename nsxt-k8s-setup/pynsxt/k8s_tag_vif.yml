@@ -1,17 +1,8 @@
 env:
   nsxManager:
-    ip: '10.16.181.153'
-    username: 'admin'    
-    password: 'VMware1!' 
-  nsxController:
-    - ip: '10.16.181.154'
-      username: 'admin'    
-      password: 'VMware1!'
-      secret: 'VMware1!'
-  nsxEdge:
-    - ip: '10.16.181.157'
-      username: 'admin'    
-      password: 'VMware1!' 
+    ip: '192.168.172.25'
+    username: 'admin'
+    password: 'VMware1!'
       
 # action: create,update,delete
     

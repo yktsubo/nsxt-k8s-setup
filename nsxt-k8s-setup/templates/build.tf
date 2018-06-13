@@ -8,21 +8,21 @@ provider "vsphere" {
 }
 
 data "vsphere_datacenter" "dc" {
-  name = "MyDC1"
+  name = "${var.vsphere_datacenter}"
 }
 
 data "vsphere_datastore" "datastore" {
-  name          = "iscsi-site3"
+  name          = "${var.vsphere_datastore}"
   datacenter_id = "${data.vsphere_datacenter.dc.id}"
 }
 
 data "vsphere_compute_cluster" "cluster" {
-  name          = "Site4"
+  name          = "${var.vsphere_cluster}"
   datacenter_id = "${data.vsphere_datacenter.dc.id}"
 }
 
 data "vsphere_network" "network1" {
-  name          = "k8s-mgmt"
+  name          = "VM Network"
   datacenter_id = "${data.vsphere_datacenter.dc.id}"
 }
 
@@ -32,7 +32,7 @@ data "vsphere_network" "network2" {
 }
 
 data "vsphere_virtual_machine" "template" {
-  name          = "ubuntu1604"
+  name          = "ubuntu"
   datacenter_id = "${data.vsphere_datacenter.dc.id}"
 }
 
@@ -62,6 +62,13 @@ resource "vsphere_virtual_machine" "k8s-master" {
     eagerly_scrub    = "${data.vsphere_virtual_machine.template.disks.0.eagerly_scrub}"
     thin_provisioned = "${data.vsphere_virtual_machine.template.disks.0.thin_provisioned}"
   }
+  disk {
+    label            = "disk1"
+    size             = "${data.vsphere_virtual_machine.template.disks.1.size}"
+    eagerly_scrub    = "${data.vsphere_virtual_machine.template.disks.1.eagerly_scrub}"
+    thin_provisioned = "${data.vsphere_virtual_machine.template.disks.1.thin_provisioned}"
+    unit_number = 1
+  }
 
   clone {
     template_uuid = "${data.vsphere_virtual_machine.template.id}"
@@ -69,17 +76,17 @@ resource "vsphere_virtual_machine" "k8s-master" {
     customize {
       linux_options {
         host_name = "k8s-master"
-        domain    = "ytsuboi.local"
-        time_zone = "Asia/Tokyo"
+        domain    = "${DOMAIN}"
+        time_zone = "UTC"
       }
 
       network_interface {
-        ipv4_address = "192.168.80.10"
+        ipv4_address = "192.168.120.70"
         ipv4_netmask = 24
       }
-      dns_server_list = ["10.127.1.131"]
-      dns_suffix_list =  ["ytsuboi.local"]
-      ipv4_gateway = "192.168.80.254"
+      dns_server_list = ["${DNS}"]
+      dns_suffix_list =  ["${DOMAIN}"]
+      ipv4_gateway = "192.168.120.1"
       network_interface {
       }
       
@@ -113,23 +120,31 @@ resource "vsphere_virtual_machine" "k8s-node1" {
     thin_provisioned = "${data.vsphere_virtual_machine.template.disks.0.thin_provisioned}"
   }
 
+  disk {
+    label            = "disk1"
+    size             = "${data.vsphere_virtual_machine.template.disks.1.size}"
+    eagerly_scrub    = "${data.vsphere_virtual_machine.template.disks.1.eagerly_scrub}"
+    thin_provisioned = "${data.vsphere_virtual_machine.template.disks.1.thin_provisioned}"
+    unit_number = 1
+  }
+
   clone {
     template_uuid = "${data.vsphere_virtual_machine.template.id}"
 
     customize {
       linux_options {
         host_name = "k8s-node1"
-        domain    = "ytsuboi.local"
-        time_zone = "Asia/Tokyo"
+        domain    = "${DOMAIN}"
+        time_zone = "UTC"
       }
 
       network_interface {
-        ipv4_address = "192.168.80.11"
+        ipv4_address = "192.168.120.71"
         ipv4_netmask = 24
       }
-      dns_server_list = ["10.127.1.131"]
-      dns_suffix_list =  ["ytsuboi.local"]
-      ipv4_gateway = "192.168.80.254"
+      dns_server_list = ["${DNS}"]
+      dns_suffix_list =  ["${DOMAIN}"]
+      ipv4_gateway = "192.168.120.1"
       network_interface {
       }
       
@@ -163,23 +178,31 @@ resource "vsphere_virtual_machine" "k8s-node2" {
     thin_provisioned = "${data.vsphere_virtual_machine.template.disks.0.thin_provisioned}"
   }
 
+  disk {
+    label            = "disk1"
+    size             = "${data.vsphere_virtual_machine.template.disks.1.size}"
+    eagerly_scrub    = "${data.vsphere_virtual_machine.template.disks.1.eagerly_scrub}"
+    thin_provisioned = "${data.vsphere_virtual_machine.template.disks.1.thin_provisioned}"
+    unit_number = 1
+  }
+
   clone {
     template_uuid = "${data.vsphere_virtual_machine.template.id}"
 
     customize {
       linux_options {
         host_name = "k8s-node2"
-        domain    = "ytsuboi.local"
-        time_zone = "Asia/Tokyo"
+        domain    = "${DOMAIN}"
+        time_zone = "UTC"
       }
 
       network_interface {
-        ipv4_address = "192.168.80.12"
+        ipv4_address = "192.168.120.72"        
         ipv4_netmask = 24
       }
-      dns_server_list = ["10.127.1.131"]
-      dns_suffix_list =  ["ytsuboi.local"]
-      ipv4_gateway = "192.168.80.254"
+      dns_server_list = ["${DNS}"]
+      dns_suffix_list =  ["${DOMAIN}"]
+      ipv4_gateway = "192.168.120.1"
       network_interface {
       }
       
@@ -214,23 +237,31 @@ resource "vsphere_virtual_machine" "k8s-node3" {
     thin_provisioned = "${data.vsphere_virtual_machine.template.disks.0.thin_provisioned}"
   }
 
+  disk {
+    label            = "disk1"
+    size             = "${data.vsphere_virtual_machine.template.disks.1.size}"
+    eagerly_scrub    = "${data.vsphere_virtual_machine.template.disks.1.eagerly_scrub}"
+    thin_provisioned = "${data.vsphere_virtual_machine.template.disks.1.thin_provisioned}"
+    unit_number = 1
+  }
+
   clone {
     template_uuid = "${data.vsphere_virtual_machine.template.id}"
 
     customize {
       linux_options {
         host_name = "k8s-node3"
-        domain    = "ytsuboi.local"
-        time_zone = "Asia/Tokyo"
+        domain    = "${DOMAIN}"
+        time_zone = "UTC"
       }
 
       network_interface {
-        ipv4_address = "192.168.80.13"
+        ipv4_address = "192.168.120.73"
         ipv4_netmask = 24
       }
-      dns_server_list = ["10.127.1.131"]
-      dns_suffix_list =  ["ytsuboi.local"]
-      ipv4_gateway = "192.168.80.254"      
+      dns_server_list = ["${DNS}"]
+      dns_suffix_list =  ["${DOMAIN}"]
+      ipv4_gateway = "192.168.120.1"
       network_interface {
       }
       

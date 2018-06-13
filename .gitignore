@@ -2,3 +2,7 @@
 *.rpm
 *.tar
 *.deb
+govc
+terraform
+*.vmdk
+*.ovf

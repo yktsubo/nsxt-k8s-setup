@@ -1,0 +1,6 @@
+vsphere_vcenter = "${VCENTER_IP}"
+vsphere_user = "${VCENTER_USER}"
+vsphere_password = "${VCENTER_PASS}"
+vsphere_datacenter = "${DATACENTER}"
+vsphere_cluster = "${CLUSTER}"
+vsphere_datastore = "${DATASTORE}"

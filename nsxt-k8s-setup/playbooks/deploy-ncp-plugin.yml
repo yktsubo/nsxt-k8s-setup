@@ -1,0 +1,167 @@
+---
+- name: Config NCP
+  hosts: single_master
+  gather_facts: True
+  vars_files:
+    - ../answerfile.yml
+  tasks:
+    ## Configure Service Account for NCP
+    - name: Assign clusteradmin role to default user
+      command: kubectl create clusterrolebinding default:default:clusteradmin --clusterrole cluster-admin --serviceaccount default:default
+      ignore_errors: True
+
+    
+    ### Obtain YAML files to run NCP and nsx-node-agent
+    - name: Download NCP yaml
+      copy:
+        src: ../files/ncp-rc-ubuntu.yml
+        dest: /tmp/ncp-rc.yml
+        force: yes
+
+    - name: Set cluster name
+      lineinfile:
+        dest: /tmp/ncp-rc.yml
+        regexp: "^ *#?cluster =.*"
+        line: "    cluster = {{ k8s.cluster_name }}"
+
+    - name: Set apiserver host IP
+      lineinfile:
+        dest: /tmp/ncp-rc.yml
+        regexp: "^ *#?apiserver_host_ip =.*"
+        line: "    apiserver_host_ip = {{ k8s.master_node }}"
+    
+    - name: Set apiserver host port
+      lineinfile:
+        dest: /tmp/ncp-rc.yml
+        regexp: "^ *#?apiserver_host_port =.*"
+        line: "    apiserver_host_port = 6443"
+    
+    - name: Set subnet to 27
+      replace:
+        dest: /tmp/ncp-rc.yml
+        regexp: "#subnet_prefix = 24"
+        replace: "subnet_prefix = 27"
+    
+    - name: Set native load balacner
+      replace:
+        dest: /tmp/ncp-rc.yml
+        regexp: "#use_native_loadbalancer = False"
+        replace: "use_native_loadbalancer = True"
+    
+    - name: Set load balacner algorithm
+      replace:
+        dest: /tmp/ncp-rc.yml
+        regexp: "#pool_algorithm = 'ROUND_ROBIN'"
+        replace: "pool_algorithm = 'ROUND_ROBIN'"
+    
+    - name: Set load balacner size
+      replace:
+        dest: /tmp/ncp-rc.yml
+        regexp: "#service_size = 'SMALL'"
+        replace: "service_size = 'SMALL'"
+    
+    - name: Set virtual servers
+      replace:
+        dest: /tmp/ncp-rc.yml
+        regexp: "#virtual_servers_per_lbs = 10"
+        replace: "virtual_servers_per_lbs = 10"
+
+    - name: Set T0 router
+      lineinfile:
+        dest: /tmp/ncp-rc.yml
+        regexp: "^ *#?tier0_router =.*"
+        line: "    tier0_router = {{ k8s.tier0_router }}"
+
+    - name: Set overlay tz
+      lineinfile:
+        dest: /tmp/ncp-rc.yml
+        regexp: "^ *#?overlay_tz =.*"
+        line: "    overlay_tz = {{ k8s.overlay_tz }}"
+
+    - name: Set ip block
+      lineinfile:
+        dest: /tmp/ncp-rc.yml
+        regexp: "^ *#?container_ip_blocks =.*"
+        line: "    container_ip_blocks = {{ k8s.container_ip_blocks }}"
+
+    - name: Set external ip pool
+      lineinfile:
+        dest: /tmp/ncp-rc.yml
+        regexp: "^ *#?external_ip_pools =.*"
+        line: "    external_ip_pools = {{ k8s.external_ip_pools }}"
+        
+    - name: Set firewall top
+      lineinfile:
+        dest: /tmp/ncp-rc.yml
+        regexp: "^ *#?top_firewall_section_marker =.*"
+        line: "    top_firewall_section_marker = {{ k8s.top_firewall_section_marker }}"
+        
+    - name: Set firewall bottom
+      lineinfile:
+        dest: /tmp/ncp-rc.yml
+        regexp: "^ *#?bottom_firewall_section_marker =.*"
+        line: "    bottom_firewall_section_marker = {{ k8s.bottom_firewall_section_marker }}"
+        
+    - name: Set master node
+      lineinfile:
+        dest: /tmp/ncp-rc.yml
+        regexp: "^ *#?kubernetes.io/hostname: .*"
+        line: "        kubernetes.io/hostname: {{ k8s.master_node }}"
+        
+    - name: Set NSX manager IP
+      lineinfile:
+        dest: /tmp/ncp-rc.yml
+        regexp: "^ *#?nsx_api_managers =.*"
+        line: "    nsx_api_managers = {{ nsxt_manager.ip }}"
+    
+    - name: Set NSX API password
+      lineinfile:
+        dest: /tmp/ncp-rc.yml
+        regexp: "^    nsx_api_password"
+        insertafter: "^ *nsx_api_managers"
+        line: "    nsx_api_password = {{ nsxt_manager.password | replace('$', '$$') }}"
+    
+    - name: Set NSX API username
+      lineinfile:
+        dest: /tmp/ncp-rc.yml
+        regexp: "^    nsx_api_user"
+        insertafter: "^ *nsx_api_managers"
+        line: "    nsx_api_user = {{ nsxt_manager.username }}"
+    
+    - name: Skip checking certs
+      lineinfile:
+        dest: /tmp/ncp-rc.yml
+        regexp: "^ *#?insecure =.*"
+        line: "    insecure = True"
+    
+    - name: Start NCP Replication Controller
+      command: kubectl apply -f /tmp/ncp-rc.yml
+    
+    ## nsx-node-agent YAML
+    - name: copy agent yaml
+      copy:
+        src: ../files/nsx-node-agent-ds-ubuntu.yml
+        dest: /tmp/nsx-node-agent-ds.yml
+        force: yes
+        
+    - name: Set cluster name
+      lineinfile:
+        dest: /tmp/nsx-node-agent-ds.yml
+        regexp: "^ *#?cluster =.*"
+        line: "    cluster = {{ k8s.cluster_name }}"
+    
+    - name: Set apiserver host IP
+      lineinfile:
+        dest: /tmp/nsx-node-agent-ds.yml
+        regexp: "^ *#?apiserver_host_ip =.*"
+        line: "    apiserver_host_ip = {{ k8s.master_node }}"
+    
+    - name: Set apiserver host port
+      lineinfile:
+        dest: /tmp/nsx-node-agent-ds.yml
+        regexp: "^ *#?apiserver_host_port =.*"
+        line: "    apiserver_host_port = 6443"
+
+        
+    - name: Start nsx-node-agent DaemonSet
+      command: kubectl apply -f /tmp/nsx-node-agent-ds.yml

@@ -1,0 +1,90 @@
+---
+- name: Prep NCP
+  hosts: nodes
+  become: yes
+  gather_facts: True
+  vars_files:
+    - ../answerfile.yml
+    - ../defaults.yml    
+  tasks:
+    - name: Download CNI rpm
+      copy:
+        src: ../files/{{ ubuntu.cni_deb }}
+        dest: /tmp/cni.deb
+    
+    - name: Download OVS
+      copy:
+        src: ../files/{{ ubuntu.ovs_deb }}          
+        dest: /tmp/ovs.deb
+    
+    - name: Download OVS data
+      copy:
+        src: ../files/{{ ubuntu.ovs_data_deb }}          
+        dest: /tmp/ovs_data.deb
+    
+    - name: Download OVS common
+      copy:
+        src: ../files/{{ ubuntu.ovs_common_deb }}                    
+        dest: /tmp/ovs_common.deb
+        
+    - name: Download lib OVS
+      copy:
+        src: ../files/{{ ubuntu.ovs_lib_deb }}                    
+        dest: /tmp/lib_ovs.deb
+    
+    ## Get NCP tar file and make it docker image
+    - name: Download ncp image tar file
+      copy:
+        src: ../files/{{ ubuntu.ncp_image }}
+        dest: /tmp/nsx_ncp_ubuntu.tar
+        force: no
+        
+    - name: install ovs 1
+      apt: deb=/tmp/ovs_data.deb
+    
+    - name: install ovs 2
+      apt: deb=/tmp/lib_ovs.deb
+    
+    - name: install ovs 3
+      apt: deb=/tmp/ovs_common.deb
+    
+    - name: install ovs 4
+      apt: deb=/tmp/ovs.deb
+        
+    - name: ovs service reload
+      shell: service openvswitch-switch force-reload-kmod
+    
+    - name: Create OVS bridge
+      openvswitch_bridge: bridge=br-int state=present fail_mode=standalone
+      args:
+        external_ids:
+            bridge-id: "br-int"
+      tags: ovs
+    
+    - name: Add the Uplink Port to OVS
+      openvswitch_port:
+        bridge: br-int
+        port: "{{ k8s.uplink_port }}"
+        state: present
+        set: Interface {{ k8s.uplink_port }} ofport_request=1
+      tags: ovs
+    
+    - name: Bring up br-int
+      command: "ip link set br-int up"
+    
+    - name: Bring up node-if
+      command: "ip link set {{ k8s.uplink_port }} up"
+    
+    - name: install CNI
+      apt: deb=/tmp/cni.deb
+    
+    # Using docker_image to load tar file to docker image
+    - name: Load image from the image tar file
+      shell: docker load -i /tmp/nsx_ncp_ubuntu.tar
+    
+    - name: Register the docker image name
+      shell: docker images | grep nsx-ncp-ubuntu
+      register: nsx_ncp_ubuntu
+
+    - name: Tag image as nsx-ncp
+      shell: docker tag "{{ nsx_ncp_ubuntu.stdout.split()[0] }}" nsx-ncp

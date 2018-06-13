@@ -1,0 +1,24 @@
+env:
+  nsxManager:
+    ip: '${NSX_MANAGER_IP}'
+    username: 'admin'
+    password: '${NSX_MANAGER_PASS}'
+  nsxController:
+    - ip: '${NSX_CONTROLLER_01_IP}'
+      username: 'admin'    
+      password: '${NSX_CONTROLLER_01_PASS}'
+      secret: 'VMware1!'
+  nsxEdge:
+    - ip: '${NSX_EDGE_01_IP}'
+      username: 'admin'    
+      password: '${NSX_EDGE_01_PASS}'
+    - ip: '${NSX_EDGE_02_IP}'
+      username: 'admin'    
+      password: '${NSX_EDGE_02_PASS}'
+      
+# action: create,update,delete
+tasks:
+  - module: 'Controller'
+    action: 'join_manager'
+  - module: 'Edge'
+    action: 'join_manager'
