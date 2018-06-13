@@ -10,8 +10,19 @@
       command: kubectl create clusterrolebinding default:default:clusteradmin --clusterrole cluster-admin --serviceaccount default:default
       ignore_errors: True
 
-    
-    ### Obtain YAML files to run NCP and nsx-node-agent
+    - name: Download Loadbalancer cert file
+      copy:
+        src: ../files/lb.csr
+        dest: /tmp/lbcert.csr
+        force: yes
+
+    - name: Download Loadbalancer private key file
+      copy:
+        src: ../files/lb.key
+        dest: /tmp/lbkey.key
+        force: yes
+        
+    ### Obtain YAML files to run NCP and nsx-node-agent        
     - name: Download NCP yaml
       copy:
         src: ../files/ncp-rc-ubuntu.yml
@@ -47,7 +58,25 @@
         dest: /tmp/ncp-rc.yml
         regexp: "#use_native_loadbalancer = False"
         replace: "use_native_loadbalancer = True"
-    
+
+    - name: Use NSX-T LB as default ingress
+      replace:
+        dest: /tmp/ncp-rc.yml
+        regexp: "#default_ingress_class_nsx = True"
+        replace: "default_ingress_class_nsx = True"
+
+    - name: Set load balacner cert file for https
+      replace:
+        dest: /tmp/ncp-rc.yml
+        regexp: "#lb_default_cert_path = <None>"
+        replace: "lb_default_cert_path = /tmp/lbcert.csr"
+
+    - name: Set load balacner key file for https
+      replace:
+        dest: /tmp/ncp-rc.yml
+        regexp: "#lb_priv_key_path = <None>"
+        replace: "lb_priv_key_path = /tmp/lbkey.key"
+      
     - name: Set load balacner algorithm
       replace:
         dest: /tmp/ncp-rc.yml
@@ -58,14 +87,29 @@
       replace:
         dest: /tmp/ncp-rc.yml
         regexp: "#service_size = 'SMALL'"
-        replace: "service_size = 'SMALL'"
-    
-    - name: Set virtual servers
+        replace: "service_size = '{{ k8s.lb_size }}'"
+
+    - name: Set virtual servers for SMALL
       replace:
         dest: /tmp/ncp-rc.yml
         regexp: "#virtual_servers_per_lbs = 10"
         replace: "virtual_servers_per_lbs = 10"
+      when: k8s.lb_size == "SMALL"
 
+    - name: Set virtual servers for MEDIUM
+      replace:
+        dest: /tmp/ncp-rc.yml
+        regexp: "#virtual_servers_per_lbs = 10"
+        replace: "virtual_servers_per_lbs = 100"
+      when: k8s.lb_size == "MEDIUM"
+
+    - name: Set virtual servers for LARGE
+      replace:
+        dest: /tmp/ncp-rc.yml
+        regexp: "#virtual_servers_per_lbs = 10"
+        replace: "virtual_servers_per_lbs = 1000n"
+      when: k8s.lb_size == "LARGE"
+    
     - name: Set T0 router
       lineinfile:
         dest: /tmp/ncp-rc.yml

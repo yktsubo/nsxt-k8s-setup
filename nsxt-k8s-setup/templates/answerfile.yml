@@ -43,6 +43,7 @@ k8s:
   master_node: k8s-master
   use_cert: false
   password: 'VMware1!'
+  lb_size: '${NSX_LB_SIZE}'
   
 Nodes:
   k8s-master:

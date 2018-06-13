@@ -1,20 +1,7 @@
 #!/bin/bash
 
-if [[ ! -v OS_USERNAME ]]; then
-    echo "You need to set Openstack variable"
-    exit 1
-fi
-
-DOCKER_ENVFILE="~/.env"
-
-VCENTER_IP=$(neutron floatingip-list -F fixed_ip_address -F floating_ip_address -f csv | grep '192.168.110.11' | cut -d '"' -f 4)
-NSX_EDGE_01_IP=$(neutron floatingip-list -F fixed_ip_address -F floating_ip_address -f csv | grep '192.168.110.41' | cut -d '"' -f 4)
-NSX_EDGE_02_IP=$(neutron floatingip-list -F fixed_ip_address -F floating_ip_address -f csv | grep '192.168.110.42' | cut -d '"' -f 4)
-ESXI_01_IP=$(neutron floatingip-list -F fixed_ip_address -F floating_ip_address -f csv | grep '192.168.120.151' | cut -d '"' -f 4)
-ESXI_02_IP=$(neutron floatingip-list -F fixed_ip_address -F floating_ip_address -f csv | grep '192.168.120.152' | cut -d '"' -f 4)
-NSX_MANAGER_IP=$(neutron floatingip-list -F fixed_ip_address -F floating_ip_address -f csv | grep '192.168.110.201' | cut -d '"' -f 4)
-NSX_CONTROLLER_01_IP=$(neutron floatingip-list -F fixed_ip_address -F floating_ip_address -f csv | grep '192.168.110.51' | cut -d '"' -f 4)
-
+DOCKER_ENVFILE=$(mktemp)
+VCENTER_IP='192.168.110.11'
 VCENTER_USER='administrator@vsphere.local'
 VCENTER_PASS='VMware1!' 
 
@@ -23,8 +10,26 @@ NSX_PASS='VMware1!'
 DATASTORE='CompData'
 DATACENTER='Datacenter Site A'
 CLUSTER='Compute Cluster'
+
+
+ESXI_01_IP='192.168.120.151'
+ESXI_02_IP='192.168.120.152'
 ESXI_USER='root'
 ESXI_PASS='VMware1!'
+
+NSX_EDGE_01_IP='192.168.110.41'
+NSX_EDGE_02_IP='192.168.110.42'
+NSX_MANAGER_IP='192.168.110.201'
+NSX_CONTROLLER_01_IP='192.168.110.51'
+NSX_LB_SIZE='SMALL'
+
+K8S_MGMT_GATEWAY='192.168.120.1'
+K8S_MGMT_PREFIX='24'
+K8S_MGMT_NETWORK='VM Network'
+K8S_MASTER_IP='192.168.120.70'
+K8S_NODE1_IP='192.168.120.71'
+K8S_NODE2_IP='192.168.120.72'
+K8S_NODE3_IP='192.168.120.73'
 
 # VARIABLE
 echo "# Variable for nsxt k8s setup docker" > ${DOCKER_ENVFILE}
@@ -63,5 +68,13 @@ echo GOVC_PASSWORD="${VCENTER_PASS}" >> ${DOCKER_ENVFILE}
 echo GOVC_DATASTORE="${DATASTORE}" >> ${DOCKER_ENVFILE}
 echo GOVC_NETWORK="VM Network" >> ${DOCKER_ENVFILE}
 echo GOVC_RESOURCE_POOL="/${DATACENTER}/host/${CLUSTER}" >> ${DOCKER_ENVFILE}
+echo K8S_MASTER_IP=${K8S_MASTER_IP} >> ${DOCKER_ENVFILE}
+echo K8S_NODE1_IP=${K8S_NODE1_IP} >> ${DOCKER_ENVFILE}
+echo K8S_NODE2_IP=${K8S_NODE2_IP} >> ${DOCKER_ENVFILE}
+echo K8S_NODE3_IP=${K8S_NODE3_IP} >> ${DOCKER_ENVFILE}
+echo NSX_LB_SIZE=${NSX_LB_SIZE} >> ${DOCKER_ENVFILE}
+echo K8S_MGMT_GATEWAY=${K8S_MGMT_GATEWAY} >> ${DOCKER_ENVFILE}
+echo K8S_MGMT_PREFIX=${K8S_MGMT_PREFIX} >> ${DOCKER_ENVFILE}
+echo K8S_MGMT_NETWORK=${K8S_MGMT_NETWORK} >> ${DOCKER_ENVFILE}
 
-sudo docker run --env-file ${DOCKER_ENVFILE} -it yuki/nsxt-k8s-setup:0.1 /bin/bash
+sudo docker run --env-file ${DOCKER_ENVFILE} -it harbor-tenant-01.sg.lab/library/nsxt-k8s-setup:0.2 

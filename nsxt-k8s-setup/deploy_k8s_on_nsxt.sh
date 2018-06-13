@@ -29,27 +29,26 @@ cat ./templates/k8s_tag_vif.yml | envsubst > ./pynsxt/k8s_tag_vif.yml
 cat ./templates/terraform.tfvars | envsubst > ./terraform/terraform.tfvars
 cat ./templates/build.tf | envsubst > ./terraform/build.tf
 
-
 # Deploy OVF and convert it to template
-./bin/govc import.ovf "ubuntu_ovf/ubuntu.ovf"
-./bin/govc vm.markastemplate "ubuntu"
+govc import.ovf "files/ubuntu_ovf/ubuntu.ovf"
+govc vm.markastemplate "ubuntu"
 
 # PowerOn VMs
-./bin/govc vm.power -on 'nsxedge-02a'
+govc vm.power -on 'nsxedge-02a'
 
 echo "Sleep 180 sec to Wait for Edge node becomes up"
 sleep 180
 
 # NSX-T configureation
-python ./pynsxt/pynsxt/main.py -c ./pynsxt/connect_to_manager.yml
+pynsxt -c ./pynsxt/connect_to_manager.yml
 
 echo "Sleep 180 sec to Wait for components ready"
 sleep 180
 
 echo "Coniguring NSX-T"
 
-python ./pynsxt/pynsxt/main.py -c ./pynsxt/prepare_infra.yml
-python ./pynsxt/pynsxt/main.py -c ./pynsxt/prepare_k8s.yml
+pynsxt -c ./pynsxt/prepare_infra.yml
+pynsxt -c ./pynsxt/prepare_k8s.yml
 
 echo "Sleep 300 sec to Wait for components ready..."
 sleep 300
@@ -57,13 +56,13 @@ sleep 300
 # Terraform is used to deploy k8s nodes
 echo "Deploying k8s nodes"
 cd ./terraform
-../bin/terraform init
-../bin/terraform apply -auto-approve
+terraform init
+terraform apply -auto-approve
 cd ../
 
 # Tag VIF of VM
 echo "Tagging k8s nodes VIF"
-python ./pynsxt/pynsxt/main.py -c ./pynsxt/k8s_tag_vif.yml
+pynsxt -c ./pynsxt/k8s_tag_vif.yml
 
 # Generate SSH key
 ssh-keygen -b 2048 -t rsa -f ~/.ssh/id_rsa -q -N ""

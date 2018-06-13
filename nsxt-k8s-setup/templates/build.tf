@@ -22,7 +22,7 @@ data "vsphere_compute_cluster" "cluster" {
 }
 
 data "vsphere_network" "network1" {
-  name          = "VM Network"
+  name          = "${K8S_MGMT_NETWORK}"
   datacenter_id = "${data.vsphere_datacenter.dc.id}"
 }
 
@@ -81,12 +81,12 @@ resource "vsphere_virtual_machine" "k8s-master" {
       }
 
       network_interface {
-        ipv4_address = "192.168.120.70"
-        ipv4_netmask = 24
+        ipv4_address = "${K8S_MASTER_IP}"
+        ipv4_netmask = "${K8S_MGMT_PREFIX}"
       }
       dns_server_list = ["${DNS}"]
       dns_suffix_list =  ["${DOMAIN}"]
-      ipv4_gateway = "192.168.120.1"
+      ipv4_gateway = "${K8S_MGMT_GATEWAY}"
       network_interface {
       }
       
@@ -139,12 +139,12 @@ resource "vsphere_virtual_machine" "k8s-node1" {
       }
 
       network_interface {
-        ipv4_address = "192.168.120.71"
-        ipv4_netmask = 24
+        ipv4_address = "${K8S_NODE1_IP}"
+        ipv4_netmask = "${K8S_MGMT_PREFIX}"
       }
       dns_server_list = ["${DNS}"]
       dns_suffix_list =  ["${DOMAIN}"]
-      ipv4_gateway = "192.168.120.1"
+      ipv4_gateway = "${K8S_MGMT_GATEWAY}"
       network_interface {
       }
       
@@ -197,12 +197,12 @@ resource "vsphere_virtual_machine" "k8s-node2" {
       }
 
       network_interface {
-        ipv4_address = "192.168.120.72"        
-        ipv4_netmask = 24
+        ipv4_address = "${K8S_NODE2_IP}"
+        ipv4_netmask = "${K8S_MGMT_PREFIX}"
       }
       dns_server_list = ["${DNS}"]
       dns_suffix_list =  ["${DOMAIN}"]
-      ipv4_gateway = "192.168.120.1"
+      ipv4_gateway = "${K8S_MGMT_GATEWAY}"
       network_interface {
       }
       
@@ -256,12 +256,12 @@ resource "vsphere_virtual_machine" "k8s-node3" {
       }
 
       network_interface {
-        ipv4_address = "192.168.120.73"
-        ipv4_netmask = 24
+        ipv4_address = "${K8S_NODE3_IP}"
+        ipv4_netmask = "${K8S_MGMT_PREFIX}"
       }
       dns_server_list = ["${DNS}"]
       dns_suffix_list =  ["${DOMAIN}"]
-      ipv4_gateway = "192.168.120.1"
+      ipv4_gateway = "${K8S_MGMT_GATEWAY}"
       network_interface {
       }
       

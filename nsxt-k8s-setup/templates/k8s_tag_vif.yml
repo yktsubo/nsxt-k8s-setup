@@ -8,7 +8,7 @@ env:
     
 tasks:
 tasks:
-  - module: 'K8s'
+  - module: 'k8s'
     action: 'update'
     data:
       validate:

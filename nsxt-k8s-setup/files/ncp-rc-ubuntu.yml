@@ -204,9 +204,20 @@ data:
     # Option to use native loadbalancer support.
     #use_native_loadbalancer = False
 
+    # Used when ingress class annotation is missing
+    # if set to true, the ingress will be handled by nsx lbs
+    # otherwise will be handled by 3rd party ingress controller (e.g. nginx)
+    #default_ingress_class_nsx = True
+
+    # Path to the default certificate file for HTTPS load balancing
+    #lb_default_cert_path = <None>
+
+    # Path to the private key file for default certificate for HTTPS load balancing
+    #lb_priv_key_path = <None>
+
     # Option to set load balancing algorithm in load balancer pool object.
     # Available choices are
-    # ROUND_ROBIN/LEAST_CONNECTION/IP_HASH
+    # ROUND_ROBIN/LEAST_CONNECTION/IP_HASH/WEIGHTED_ROUND_ROBIN
     #pool_algorithm = 'ROUND_ROBIN'
 
     # Option to set load balancer service size. Available choices are
@@ -250,11 +261,6 @@ data:
 
     # Firewall sections for this cluster will be created above this mark section
     #bottom_firewall_section_marker = <None>
-
-    # Retrieve the node VIF via the display name of the VM, in deployments where
-    # the display name of the VM is same as the node name.
-    # This option is deprecated in NSX-T 2.1.0.2 release
-    #get_node_vif_by_vm_name = False
 
 
 ---

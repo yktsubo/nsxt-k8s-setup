@@ -6,3 +6,5 @@ govc
 terraform
 *.vmdk
 *.ovf
+*.csr
+*.key

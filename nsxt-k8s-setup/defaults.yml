@@ -1,10 +1,10 @@
 ubuntu:
-  cni_deb: nsx-cni_2.1.4.8521446_amd64.deb
-  ovs_deb: openvswitch-switch_2.9.1.8502965-1_amd64.deb
-  ovs_common_deb: openvswitch-common_2.9.1.8502965-1_amd64.deb
-  ovs_data_deb: openvswitch-datapath-dkms_2.9.1.8502965-1_all.deb
-  ovs_lib_deb: libopenvswitch_2.9.1.8502965-1_amd64.deb
-  ncp_image: nsx-ncp-ubuntu-2.1.4.8521446.tar
+  cni_deb: nsx-cni_2.2.0.8740202_amd64.deb
+  ovs_deb: openvswitch-switch_2.9.1.8614397-1_amd64.deb
+  ovs_common_deb: openvswitch-common_2.9.1.8614397-1_amd64.deb
+  ovs_data_deb: openvswitch-datapath-dkms_2.9.1.8614397-1_all.deb
+  ovs_lib_deb: libopenvswitch_2.9.1.8614397-1_amd64.deb
+  ncp_image: nsx-ncp-ubuntu-2.2.0.8740202.tar
   required_package:
     - docker.io
     - apt-transport-https
@@ -15,4 +15,3 @@ ubuntu:
     - build-essential
     - dkms
     - sshpass
-  
