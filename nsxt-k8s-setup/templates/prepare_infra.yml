@@ -37,6 +37,7 @@ tasks:
       host_switch_mode: 'STANDARD'
       host_switch_name: 'overlayNVDS'
       transport_type: 'OVERLAY'
+      nested_nsx: True
   - module: 'TransportZone'
     action: 'create'
     data:
