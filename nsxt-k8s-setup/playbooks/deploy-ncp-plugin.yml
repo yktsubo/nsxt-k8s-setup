@@ -209,3 +209,11 @@
         
     - name: Start nsx-node-agent DaemonSet
       command: kubectl apply -f /tmp/nsx-node-agent-ds.yml
+
+    - name: Get kube-dns pod name
+      shell: kubectl -n kube-system get pod | grep kube-dns | cut -f 1 -d ' '
+      register: kube_dns_pod
+      changed_when: False
+
+    - name: Get kube-dns pod name
+      shell: kubectl -n kube-system delete pod {{ kube_dns_pod.stdout }}
