@@ -8,3 +8,5 @@ terraform
 *.ovf
 *.csr
 *.key
+*.mf
+*.nvram

@@ -1,7 +1,0 @@
----
-- include: prep_ansible.yml
-- include: prep_os.yml
-- include: prep_ncp.yml
-- include: kubeadm-init.yml
-- include: kubeadm-join.yml
-- include: deploy-ncp-plugin.yml
