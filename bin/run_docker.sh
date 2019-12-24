@@ -78,4 +78,4 @@ echo K8S_MGMT_PREFIX=${K8S_MGMT_PREFIX} >> ${DOCKER_ENVFILE}
 echo K8S_MGMT_NETWORK=${K8S_MGMT_NETWORK} >> ${DOCKER_ENVFILE}
 
 echo K8S_TRANSPORT_LS=${K8S_TRANSPORT_LS} >> ${DOCKER_ENVFILE}
-sudo docker run --env-file ${DOCKER_ENVFILE} --rm -it harbor-tenant-01.sg.lab/library/nsxt-k8s-setup:2.5.0
+sudo docker run --env-file ${DOCKER_ENVFILE} --rm -it harbor-tenant-01.sg.lab/library/nsxt-k8s-setup:2.5.1
