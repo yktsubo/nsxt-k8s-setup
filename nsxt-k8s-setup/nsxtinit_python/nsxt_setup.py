@@ -208,9 +208,22 @@ def _create_esxi_tn(session, args):
                 "thumbprint":  thumbprint
             }
         }
-        fabric_node = _nsx_api(session, args, 'post', '/api/v1/fabric/nodes/', data)
-        node_uuid = fabric_node['id']
-        
+        registering_node = True
+        retry_num = 0
+        while registering_node:
+            try:
+                fabric_node = _nsx_api(session, args, 'post', '/api/v1/fabric/nodes/', data)
+                if 'id' in fabric_node:
+                    node_uuid = fabric_node['id']
+                    registering_node= False
+            except:
+                print('Retrying')
+            time.sleep(30)
+            retry_num += 1
+            if retry_num > 30:
+                print('ERROR to register compute host ' + data['display_name'])
+                sys.exit(1)
+                    
         node_initializing = True
         retry_num = 0
         while node_initializing:
@@ -222,7 +235,7 @@ def _create_esxi_tn(session, args):
                 print('Retrying')
             time.sleep(30)
             retry_num += 1
-            if retry_num > 10:
+            if retry_num > 30:
                 print('ERROR to install computes')
                 sys.exit(1)
      
@@ -256,9 +269,21 @@ def _create_esxi_tn(session, args):
             }
         }
 
-        _nsx_api(session, args, 'post', '/api/v1/transport-nodes',data)
 
-                
+        node_configuring = True
+        retry_num = 0
+        while node_configuring:
+            try:
+                registered_fabric_node = _nsx_api(session, args, 'post', '/api/v1/transport-nodes',data)
+                if 'id' in registered_fabric_node:
+                    node_configuring = False
+            except:
+                print('Retrying')
+            time.sleep(30)
+            retry_num += 1
+            if retry_num > 30:
+                print('ERROR to install computes')
+                sys.exit(1)
     pass
 
 def _connect_cli(config):

@@ -27,6 +27,7 @@ cat ./templates/terraform.tfvars | envsubst > ./terraform/terraform.tfvars
 cat ./templates/build.tf | envsubst > ./terraform/build.tf
 
 # Deploy OVF and convert it to template
+govc ls
 govc import.ovf 'http://192.168.176.10:8080/lab/ContainerLab/ubuntu.ovf'
 govc vm.markastemplate "ubuntu"
 
